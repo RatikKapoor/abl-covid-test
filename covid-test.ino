@@ -20,7 +20,12 @@
 //#define LED_BUILTIN 2   // Set the GPIO pin where you connected your test LED or comment this line out if your dev board has a built-in LED
 #define LED1 32
 #define LED2 33
-#define LED3 25
+//#define LED3 25
+
+// Motor
+#include <ESP32_Servo.h>
+int servoPin = 25;
+Servo servo;
 
 
 // Wifi AP Credentials
@@ -42,7 +47,7 @@ bool threeState = false;
 void setup() {
   pinMode(LED1, OUTPUT);
   pinMode(LED2, OUTPUT);
-  pinMode(LED3, OUTPUT);
+//  pinMode(LED3, OUTPUT);
   tft.init();
   tft.setRotation(3);
   tft.fillScreen(ST7735_BLACK);
@@ -60,13 +65,18 @@ void setup() {
 
   pinOutput(LED1, LOW);
   pinOutput(LED2, LOW);
-  pinOutput(LED3, LOW);
+//  pinOutput(LED3, LOW);
 
   Serial.println("Server started");
   text("Server started, LEDs Off");
+  servo.attach(servoPin);
+  servo.writeMicroseconds(1500); // send "stop" signal to ESC.
+  delay(3000);
 }
 
 void loop() {
+  int signal = 1700;
+  servo.writeMicroseconds(signal);
   WiFiClient client = server.available();   // listen for incoming clients
 
   if (client) {                             // if you get a client,
@@ -122,11 +132,11 @@ void loop() {
           tftStatus();
         }
         if (currentLine.endsWith("GET /H3")) {
-          pinOutput(LED3, HIGH);
+//          pinOutput(LED3, HIGH);
           tftStatus();
         }
         if (currentLine.endsWith("GET /L3")) {
-          pinOutput(LED3, LOW);
+//          pinOutput(LED3, LOW);
           tftStatus();
         }
       }
@@ -166,9 +176,9 @@ void pinOutput(int pin, bool state) {
     case LED2:
       twoState = state;
       break;
-    case LED3:
-      threeState = state;
-      break;
+//    case LED3:
+//      threeState = state;
+//      break;
     default:
       // Default
       break;
