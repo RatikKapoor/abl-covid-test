@@ -46,6 +46,7 @@ public:
     ~MotorController();
     void setPower(int power);
     int getPower();
+    void run();
 };
 
 MotorController::MotorController(int pin)
@@ -67,6 +68,11 @@ int MotorController::getPower()
 void MotorController::setPower(int power)
 {
     ms = map(power, 0, 100, 1500, 1700);
+}
+
+void MotorController::run()
+{
+    servo.writeMicroseconds(this->ms);
 }
 
 /**
@@ -203,20 +209,26 @@ TFT::~TFT()
 class WifiAP
 {
 private:
-    WifiServer server(80);
+    WiFiServer *server = new WiFiServer(80);
 public:
-    WifiAP(string ssid, string password);
+    WifiAP(const char* ssid, const char* password);
     ~WifiAP();
+    WiFiClient available();
 };
 
-WifiAP::WifiAP(string ssid, string password)
+WifiAP::WifiAP(const char* ssid, const char* password)
 {
     WiFi.softAP(ssid, password);
-    server.begin();
+    server->begin();
 }
 
 WifiAP::~WifiAP()
 {
+}
+
+WiFiClient WifiAP::available()
+{
+    return this->server->available();
 }
 
 /**
