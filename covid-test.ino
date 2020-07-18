@@ -19,6 +19,9 @@
 #include <WiFi.h>
 #include <WiFiClient.h>
 #include <WiFiAP.h>
+// Wifi AP Setup
+const char *ssid = "ESP32_ABL_NET";
+const char *password = "password";
 
 // Define pin designations
 #define HEATER_PIN 32
@@ -85,6 +88,7 @@ class RelayController
 private:
     int pin;
     bool state = false;
+
 public:
     RelayController(int pin);
     ~RelayController();
@@ -95,6 +99,7 @@ public:
 RelayController::RelayController(int pin)
 {
     this->pin = pin;
+    pinMode(this->pin, OUTPUT);
 }
 
 RelayController::~RelayController()
@@ -110,7 +115,6 @@ void RelayController::setState(bool state)
 {
     this->state = state;
 }
-
 
 /**
  * 
@@ -129,6 +133,7 @@ public:
     ~IO();
     void setMotorPower(int power);
     int getMotorPower();
+    void runMotor();
     void setHeaterState(bool state);
     bool getHeaterState();
     void setLedArrayState(bool state);
@@ -137,9 +142,9 @@ public:
 
 IO::IO(int motorPin, int heaterPin, int ledArrayPin)
 {
-    this->motorController =  new MotorController(motorPin);
-    this->heaterController =  new RelayController(heaterPin);
-    this->ledArrayController =  new RelayController(ledArrayPin);
+    this->motorController = new MotorController(motorPin);
+    this->heaterController = new RelayController(heaterPin);
+    this->ledArrayController = new RelayController(ledArrayPin);
 }
 
 IO::~IO()
@@ -155,6 +160,12 @@ void IO::setMotorPower(int power)
 int IO::getMotorPower()
 {
     return motorController->getPower();
+}
+
+void IO::runMotor()
+{
+    motorController->run();
+    return;
 }
 
 void IO::setHeaterState(bool state)
@@ -187,18 +198,40 @@ bool IO::getLedArrayState()
 class TFT
 {
 private:
-    /* data */
+    Adafruit_ST7735 *tft;
+
 public:
-    TFT(/* args */);
+    TFT(int CS, int DC);
     ~TFT();
+    void text(String text);
+    void text(String text, int x, int y);
+    void text(String text, int x, int y, unsigned short color);
 };
 
-TFT::TFT(/* args */)
+TFT::TFT(int CS, int DC)
 {
+    this->tft = new Adafruit_ST7735(CS, DC, -1);
+    this->tft->init();
+    this->tft->setRotation(3);
+    this->tft->fillScreen(ST7735_BLACK);
 }
 
 TFT::~TFT()
 {
+}
+
+void TFT::text(String text)
+{
+    this->text(text, 5, 5);
+}
+
+void TFT::text(String text, int x, int y)
+{
+    tft.fillScreen(ST7735_BLACK);
+    tft.setCursor(x, y);
+    tft.setTextColor(0xFFFF);
+    tft.setTextWrap(true);
+    tft.print(text);
 }
 
 /**
@@ -210,13 +243,14 @@ class WifiAP
 {
 private:
     WiFiServer *server = new WiFiServer(80);
+
 public:
-    WifiAP(const char* ssid, const char* password);
+    WifiAP(const char *ssid, const char *password);
     ~WifiAP();
     WiFiClient available();
 };
 
-WifiAP::WifiAP(const char* ssid, const char* password)
+WifiAP::WifiAP(const char *ssid, const char *password)
 {
     WiFi.softAP(ssid, password);
     server->begin();
@@ -238,6 +272,9 @@ WiFiClient WifiAP::available()
  */
 void setup()
 {
+    TFT *tft = new TFT(TFT_CS, TFT_DC);
+    IO *io = new IO(SERVO_PIN, HEATER_PIN, LED_ARRAY_PIN);
+    WifiAP *wifiAP = new WifiAP(ssid, password);
 }
 
 /**

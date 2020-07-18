@@ -32,8 +32,8 @@
 Servo servo;
 
 // Wifi AP Setup
-const char *ssid = "ESP32_ABL_NET";
-const char *password = "password";
+//const char *ssid = "ESP32_ABL_NET";
+//const char *password = "password";
 WiFiServer server(80);
 
 // TFT display setup
