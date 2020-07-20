@@ -106,6 +106,7 @@ class RelayController
 private:
     int pin;
     bool enabled = false;
+    bool active = true;
     void updatePin();
 
 public:
@@ -113,6 +114,8 @@ public:
     ~RelayController();
     void setEnabled(bool enabled);
     bool getEnabled();
+    void setActive(bool active);
+    bool getActive();
 };
 
 RelayController::RelayController(int pin)
@@ -140,8 +143,27 @@ void RelayController::setEnabled(bool enabled)
 
 void RelayController::updatePin()
 {
-    digitalWrite(this->pin, enabled ? HIGH : LOW);
+    if (this->enabled && this->active)
+    {
+        digitalWrite(HIGH);
+    }
+    else 
+    {
+        digitalWrite(LOW);
+    }
     return;
+}
+
+void RelayController::setActive(bool active)
+{
+    this->active = active;
+    this->updatePin();
+    return;
+}
+
+void RelayController::getActive()
+{
+    return this->active;
 }
 
 /**
@@ -174,7 +196,6 @@ public:
 TemperatureSensor::TemperatureSensor(int pin)
 {
     this->pin = pin;
-    //    pinMode(this->pin, INPUT);
 }
 
 TemperatureSensor::~TemperatureSensor()
@@ -253,9 +274,13 @@ int IO::getMotorPower()
 void IO::run()
 {
     motorController->run();
-    if (temperatureSensor->getCurrentTemp() > 62.0 && heaterController->getEnabled())
+    if (temperatureSensor->getCurrentTemp() > 61.5 && heaterController->getEnabled())
     {
-        heaterController->setEnabled(false);
+        heaterController->setActive(false);
+    } 
+    else if (temperatureSensor->getCurrentTemp() < 58.5 && heaterController->getEnabled())
+    {
+        heaterController->setActive(true);
     }
     return;
 }
