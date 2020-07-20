@@ -145,11 +145,11 @@ void RelayController::updatePin()
 {
     if (this->enabled && this->active)
     {
-        digitalWrite(HIGH);
+        digitalWrite(this->pin, HIGH);
     }
     else 
     {
-        digitalWrite(LOW);
+        digitalWrite(this->pin, LOW);
     }
     return;
 }
@@ -161,7 +161,7 @@ void RelayController::setActive(bool active)
     return;
 }
 
-void RelayController::getActive()
+bool RelayController::getActive()
 {
     return this->active;
 }
