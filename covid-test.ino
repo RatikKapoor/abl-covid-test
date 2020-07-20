@@ -29,7 +29,7 @@ const char *password = "password";
 #define HEATER_PIN 32
 #define LED_ARRAY_PIN 33
 #define SERVO_PIN 25
-#define TEMP_SENSOR_PIN 36
+#define TEMP_SENSOR_PIN 39
 #define TFT_DC 2
 #define TFT_RST -1
 #define TFT_CS 5
@@ -105,14 +105,14 @@ class RelayController
 {
 private:
     int pin;
-    bool state = false;
+    bool enabled = false;
     void updatePin();
 
 public:
     RelayController(int pin);
     ~RelayController();
-    void setState(bool state);
-    bool getState();
+    void setEnabled(bool enabled);
+    bool getEnabled();
 };
 
 RelayController::RelayController(int pin)
@@ -126,21 +126,21 @@ RelayController::~RelayController()
 {
 }
 
-bool RelayController::getState()
+bool RelayController::getEnabled()
 {
-    return this->state;
+    return this->enabled;
 }
 
-void RelayController::setState(bool state)
+void RelayController::setEnabled(bool enabled)
 {
-    this->state = state;
+    this->enabled = enabled;
     this->updatePin();
     return;
 }
 
 void RelayController::updatePin()
 {
-    digitalWrite(this->pin, state ? HIGH : LOW);
+    digitalWrite(this->pin, enabled ? HIGH : LOW);
     return;
 }
 
@@ -153,11 +153,11 @@ class TemperatureSensor
 {
 private:
     int pin;
-//    double temps[] = new double[10];
+    //    double temps[] = new double[10];
     double currentTemp;
-    int currentPtr = 0;
+    //    int currentPtr = 0;
 
-    double adcMax = 1023.0, Vs = 3.3;
+    double adcMax = 4095.0, Vs = 3.3;
     double R1 = 100000.0; // voltage divider resistor value
     double Beta = 3950.0; // Beta value
     double To = 298.15;   // Temperature in Kelvin for 25 degree Celsius
@@ -174,7 +174,7 @@ public:
 TemperatureSensor::TemperatureSensor(int pin)
 {
     this->pin = pin;
-    pinMode(this->pin, INPUT);
+    //    pinMode(this->pin, INPUT);
 }
 
 TemperatureSensor::~TemperatureSensor()
@@ -188,7 +188,7 @@ void TemperatureSensor::calculateTemp()
 
     Vout = analogRead(this->pin) * this->Vs / this->adcMax;
     Rt = this->R1 * Vout / (this->Vs - Vout);
-    T = 1 / (1 / this->To + log(Rt / this->Ro) / this->Beta);
+    T = 1 / (1 / this->To - log(Rt / this->Ro) / this->Beta);
     Tc = T - 273.15;
     this->currentTemp = Tc;
     return;
@@ -218,11 +218,11 @@ public:
     ~IO();
     void setMotorPower(int power);
     int getMotorPower();
-    void runMotor();
-    void setHeaterState(bool state);
-    bool getHeaterState();
-    void setLedArrayState(bool state);
-    bool getLedArrayState();
+    void run();
+    void setHeaterEnabled(bool enabled);
+    bool getHeaterEnabled();
+    void setLedArrayEnabled(bool enabled);
+    bool getLedArrayEnabled();
     double getCurrentTemperature();
     String getJsonState();
 };
@@ -250,32 +250,36 @@ int IO::getMotorPower()
     return motorController->getPower();
 }
 
-void IO::runMotor()
+void IO::run()
 {
     motorController->run();
+    if (temperatureSensor->getCurrentTemp() > 62.0 && heaterController->getEnabled())
+    {
+        heaterController->setEnabled(false);
+    }
     return;
 }
 
-void IO::setHeaterState(bool state)
+void IO::setHeaterEnabled(bool enabled)
 {
-    heaterController->setState(state);
+    heaterController->setEnabled(enabled);
     return;
 }
 
-bool IO::getHeaterState()
+bool IO::getHeaterEnabled()
 {
-    return heaterController->getState();
+    return heaterController->getEnabled();
 }
 
-void IO::setLedArrayState(bool state)
+void IO::setLedArrayEnabled(bool enabled)
 {
-    ledArrayController->setState(state);
+    ledArrayController->setEnabled(enabled);
     return;
 }
 
-bool IO::getLedArrayState()
+bool IO::getLedArrayEnabled()
 {
-    return ledArrayController->getState();
+    return ledArrayController->getEnabled();
 }
 
 double IO::getCurrentTemperature()
@@ -285,7 +289,7 @@ double IO::getCurrentTemperature()
 
 String IO::getJsonState()
 {
-    return (String) "{heaterState:" + (this->getHeaterState() ? (String) "true," : (String) "false,") + (String) "motorPower:" + this->getMotorPower() + (String) ",ledArrayState:" + (this->getLedArrayState() ? (String) "true," : (String) "false,") + (String) "currentTemp:" + (String)this->getCurrentTemperature() + (String) "}";
+    return (String) "{heaterEnabled:" + (this->getHeaterEnabled() ? (String) "true," : (String) "false,") + (String) "motorPower:" + this->getMotorPower() + (String) ",ledArrayEnabled:" + (this->getLedArrayEnabled() ? (String) "true," : (String) "false,") + (String) "currentTemp:" + (String)this->getCurrentTemperature() + (String) "}";
 }
 
 /**
@@ -410,12 +414,12 @@ bool WifiAP::handleRequest(String device, String newState)
     {
         if (newState == "on")
         {
-            this->io->setHeaterState(true);
+            this->io->setHeaterEnabled(true);
             return true;
         }
         else if (newState == "off")
         {
-            this->io->setHeaterState(false);
+            this->io->setHeaterEnabled(false);
             return true;
         }
         else
@@ -427,12 +431,12 @@ bool WifiAP::handleRequest(String device, String newState)
     {
         if (newState == "on")
         {
-            this->io->setLedArrayState(true);
+            this->io->setLedArrayEnabled(true);
             return true;
         }
         else if (newState == "off")
         {
-            this->io->setLedArrayState(false);
+            this->io->setLedArrayEnabled(false);
             return true;
         }
         else
@@ -467,7 +471,7 @@ void setup()
     while (true)
     {
         wifiAP->handleClient();
-        io->runMotor();
+        io->run();
     }
 }
 
