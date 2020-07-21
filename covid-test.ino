@@ -33,6 +33,49 @@ const char *password = "password";
 #define TFT_DC 2
 #define TFT_RST -1
 #define TFT_CS 5
+#define UP_PIN 17
+#define DOWN_PIN 16
+#define OK_PIN 15
+
+/**
+ * 
+ * Data Structs
+ * 
+ */
+struct StatusMessage
+{
+    String message;
+    short colour;
+};
+
+struct IoState
+{
+    bool heaterEnabled;
+    bool heaterActive;
+    bool ledArrayEnabled;
+    int motorPower;
+    double currentTemp;
+};
+
+struct ButtonsPressed
+{
+    bool wasUpPressed;
+    bool wasDownPressed;
+    bool wasOkPressed;
+    unsigned long lastInterruptTime;
+};
+
+/**
+ * 
+ * Globals
+ * 
+ */
+struct StatusMessage tftStatus = {
+    "Initializing...",
+    0x057F};
+
+struct IoState ioState;
+struct ButtonsPressed buttonsPressed;
 
 /**
  * 
@@ -147,7 +190,7 @@ void RelayController::updatePin()
     {
         digitalWrite(this->pin, HIGH);
     }
-    else 
+    else
     {
         digitalWrite(this->pin, LOW);
     }
@@ -242,10 +285,12 @@ public:
     void run();
     void setHeaterEnabled(bool enabled);
     bool getHeaterEnabled();
+    bool getHeaterActive();
     void setLedArrayEnabled(bool enabled);
     bool getLedArrayEnabled();
     double getCurrentTemperature();
     String getJsonState();
+    void updateIoState();
 };
 
 IO::IO(int motorPin, int heaterPin, int ledArrayPin, int tempPin)
@@ -254,6 +299,7 @@ IO::IO(int motorPin, int heaterPin, int ledArrayPin, int tempPin)
     this->heaterController = new RelayController(heaterPin);
     this->ledArrayController = new RelayController(ledArrayPin);
     this->temperatureSensor = new TemperatureSensor(tempPin);
+    this->updateIoState();
 }
 
 IO::~IO()
@@ -263,6 +309,7 @@ IO::~IO()
 void IO::setMotorPower(int power)
 {
     motorController->setPower(power);
+    this->updateIoState();
     return;
 }
 
@@ -277,7 +324,7 @@ void IO::run()
     if (temperatureSensor->getCurrentTemp() > 61.5 && heaterController->getEnabled())
     {
         heaterController->setActive(false);
-    } 
+    }
     else if (temperatureSensor->getCurrentTemp() < 58.5 && heaterController->getEnabled())
     {
         heaterController->setActive(true);
@@ -288,6 +335,7 @@ void IO::run()
 void IO::setHeaterEnabled(bool enabled)
 {
     heaterController->setEnabled(enabled);
+    this->updateIoState();
     return;
 }
 
@@ -296,9 +344,15 @@ bool IO::getHeaterEnabled()
     return heaterController->getEnabled();
 }
 
+bool IO::getHeaterActive()
+{
+    return this->heaterController->getActive();
+}
+
 void IO::setLedArrayEnabled(bool enabled)
 {
     ledArrayController->setEnabled(enabled);
+    this->updateIoState();
     return;
 }
 
@@ -317,6 +371,15 @@ String IO::getJsonState()
     return (String) "{heaterEnabled:" + (this->getHeaterEnabled() ? (String) "true," : (String) "false,") + (String) "motorPower:" + this->getMotorPower() + (String) ",ledArrayEnabled:" + (this->getLedArrayEnabled() ? (String) "true," : (String) "false,") + (String) "currentTemp:" + (String)this->getCurrentTemperature() + (String) "}";
 }
 
+void IO::updateIoState()
+{
+    ioState.currentTemp = this->getCurrentTemperature();
+    ioState.heaterActive = this->getHeaterActive();
+    ioState.heaterEnabled = this->getHeaterEnabled();
+    ioState.ledArrayEnabled = this->getLedArrayEnabled();
+    ioState.motorPower = this->getMotorPower();
+}
+
 /**
  * 
  * TFT
@@ -326,6 +389,7 @@ class TFT
 {
 private:
     Adafruit_ST7735 *tft;
+    bool isPaused = false;
 
 public:
     TFT(int CS, int DC);
@@ -335,6 +399,7 @@ public:
     void text(String text, unsigned short color);
     void text(String text, int x, int y);
     void text(String text, int x, int y, unsigned short color);
+    void run();
 };
 
 TFT::TFT(int CS, int DC)
@@ -377,6 +442,35 @@ void TFT::text(String text, int x, int y, unsigned short color)
     tft->print(text);
 }
 
+void TFT::run()
+{
+    this->clear();
+    this->text(tftStatus.message, tftStatus.colour);
+    this->text((String) "Temp: " + (String)ioState.currentTemp, 0, 10, 0xEEEE);
+    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 20, 0xEEEE);
+    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 30, 0xEEEE);
+    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 40, 0xEEEE);
+
+    if (buttonsPressed.wasDownPressed || buttonsPressed.wasOkPressed || buttonsPressed.wasUpPressed)
+    {
+        if (buttonsPressed.wasUpPressed)
+        {
+            this->text("UP", 0, 60);
+            buttonsPressed.wasUpPressed = false;
+        }
+        if (buttonsPressed.wasDownPressed)
+        {
+            this->text("DOWN", 0, 70);
+            buttonsPressed.wasDownPressed = false;
+        }
+        if (buttonsPressed.wasOkPressed)
+        {
+            this->text("OK", 0, 80);
+            buttonsPressed.wasOkPressed = false;
+        }
+    }
+}
+
 /**
  * 
  * WifiAP
@@ -408,17 +502,16 @@ WifiAP::WifiAP(const char *ssid, const char *password, IO *io, TFT *tft)
         if (this->handleRequest(this->server->pathArg(0), this->server->pathArg(1)))
         {
             this->server->send(200, "application/json", this->io->getJsonState());
-            this->tft->clear();
-            this->tft->text("Good Request", 0x17E0);
-            this->tft->text(this->io->getJsonState(), 0, 10, 0xEEEE);
+            tftStatus.message = "Good Request";
+            tftStatus.colour = 0x17E0;
         }
         else
         {
             this->server->send(404, "text/plain", "Bad request");
-            this->tft->clear();
-            this->tft->text("Bad Request", 0xF800);
-            this->tft->text(this->io->getJsonState(), 0, 10, 0xEEEE);
+            tftStatus.message = "Bad Request";
+            tftStatus.colour = 0xF800;
         }
+        this->tft->run();
     });
     server->begin();
 }
@@ -478,25 +571,101 @@ bool WifiAP::handleRequest(String device, String newState)
 
 /**
  * 
+ * Buttons
+ * 
+ */
+class Buttons
+{
+private:
+    int upPin;
+    int downPin;
+    int okPin;
+    bool upPresssed;
+    bool downPressed;
+    bool okPressed;
+    TFT *tft;
+
+public:
+    Buttons(int upPin, int downPin, int okPin, TFT *tft);
+    ~Buttons();
+    static void onUpPress();
+    static void onDownPress();
+    static void onOkPress();
+};
+
+Buttons::Buttons(int upPin, int downPin, int okPin, TFT *tft)
+{
+    this->upPin = upPin;
+    this->downPin = downPin;
+    this->okPin = okPin;
+    pinMode(upPin, INPUT_PULLUP);
+    pinMode(downPin, INPUT_PULLUP);
+    pinMode(okPin, INPUT_PULLUP);
+    attachInterrupt(upPin, this->onUpPress, RISING);
+    attachInterrupt(downPin, this->onDownPress, RISING);
+    attachInterrupt(okPin, this->onOkPress, RISING);
+    this->tft = tft;
+}
+
+Buttons::~Buttons()
+{
+}
+
+void Buttons::onUpPress()
+{
+    if (millis() - buttonsPressed.lastInterruptTime > 200)
+    {
+        buttonsPressed.wasUpPressed = true;
+        Serial.println("upPressed");
+    }
+    buttonsPressed.lastInterruptTime = millis();
+}
+
+void Buttons::onDownPress()
+{
+    if (millis() - buttonsPressed.lastInterruptTime > 200)
+    {
+        buttonsPressed.wasDownPressed = true;
+        Serial.println("downPressed");
+    }
+    buttonsPressed.lastInterruptTime = millis();
+}
+
+void Buttons::onOkPress()
+{
+    if (millis() - buttonsPressed.lastInterruptTime > 200)
+    {
+        buttonsPressed.wasOkPressed = true;
+        Serial.println("okPressed");
+    }
+    buttonsPressed.lastInterruptTime = millis();
+}
+
+/**
+ * 
  * Setup
  * 
  */
 void setup()
 {
+    Serial.begin(9600);
     TFT *tft = new TFT(TFT_CS, TFT_DC);
     tft->text("ABL Covid Test", 0, 0, 0xFCA0);
     tft->text("\n\nInitializing...\nPlease wait", 0, 0, 0xFFFF);
     IO *io = new IO(SERVO_PIN, HEATER_PIN, LED_ARRAY_PIN, TEMP_SENSOR_PIN);
     WifiAP *wifiAP = new WifiAP(ssid, password, io, tft);
     delay(2000);
-    tft->clear();
-    tft->text("Ready", 0x17E0);
-    tft->text(io->getJsonState(), 0, 10, 0xEEEE);
+    tftStatus.message = "Ready";
+    tftStatus.colour = 0x17E0;
+    tft->run();
+    Buttons *buttons = new Buttons(UP_PIN, DOWN_PIN, OK_PIN, tft);
 
     while (true)
     {
         wifiAP->handleClient();
         io->run();
+        if (buttonsPressed.wasDownPressed || buttonsPressed.wasOkPressed || buttonsPressed.wasUpPressed)
+            tft->run();
     }
 }
 
