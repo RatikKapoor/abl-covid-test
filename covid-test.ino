@@ -30,7 +30,7 @@ const char *password = "password";
 #define LED_ARRAY_PIN 33
 #define SERVO_PIN 25
 #define TEMP1_SENSOR_PIN 39
-#define TEMP2_SENSOR_PIN 34
+#define TEMP2_SENSOR_PIN 36
 #define TEMP3_SENSOR_PIN 35
 #define TFT_DC 2
 #define TFT_RST -1
@@ -85,6 +85,7 @@ struct StatusMessage tftStatus = {
 
 struct IoState ioState;
 struct ButtonsPressed buttonsPressed;
+unsigned long screenRefresh = 0;
 
 /**
  * 
@@ -190,6 +191,7 @@ void RelayController::setEnabled(bool enabled)
 {
     this->enabled = enabled;
     this->updatePin();
+    buttonsPressed.lastInterruptTime = millis() + 50; // Debounced here to prevent cross-talk between buttons and relay pins
     return;
 }
 
@@ -229,9 +231,7 @@ private:
     int pin1;
     int pin2;
     int pin3;
-    //    double temps[] = new double[10];
     double currentTemp;
-    //    int currentPtr = 0;
 
     double adcMax = 4095.0, Vs = 3.3;
     double R1 = 100000.0; // voltage divider resistor value
@@ -267,7 +267,6 @@ double TemperatureSensor::calculateTemp(int pin)
     Rt = this->R1 * Vout / (this->Vs - Vout);
     T = 1 / (1 / this->To - log(Rt / this->Ro) / this->Beta);
     Tc = T - 273.15;
-    // this->currentTemp = Tc;
     return Tc;
 }
 
@@ -469,7 +468,6 @@ void TFT::run()
     {
         if (buttonsPressed.wasUpPressed)
         {
-            this->text("UP", 0, 60);
             switch (currentSelection)
             {
             case CurrentSelection::LedArray:
@@ -487,7 +485,6 @@ void TFT::run()
         }
         if (buttonsPressed.wasDownPressed)
         {
-            this->text("DOWN", 0, 70);
             switch (currentSelection)
             {
             case CurrentSelection::Heater:
@@ -505,7 +502,6 @@ void TFT::run()
         }
         if (buttonsPressed.wasOkPressed)
         {
-            this->text("OK", 0, 80);
             switch (currentSelection)
             {
             case CurrentSelection::Heater:
@@ -543,9 +539,10 @@ void TFT::run()
 
     this->text(tftStatus.message, tftStatus.colour);
     this->text((String) "Temp: " + (String)ioState.currentTemp, 0, 10, 0xFFFF);
-    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 25, currentSelection == CurrentSelection::Heater ? 0xFFFF : 0xDDDD);
-    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 35, currentSelection == CurrentSelection::LedArray ? 0xFFFF : 0xDDDD);
-    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 45, currentSelection == CurrentSelection::Motor ? 0xFFFF : 0xDDDD);
+    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 25, currentSelection == CurrentSelection::Heater ? 0xFFFF : 0xBDD7);
+    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 35, currentSelection == CurrentSelection::LedArray ? 0xFFFF : 0xBDD7);
+    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 45, currentSelection == CurrentSelection::Motor ? 0xFFFF : 0xBDD7);
+    this->text((String) "Press Up/Down/Ok to\ntoggle state.", 0, 60, 0xDEDB);
 }
 
 /**
@@ -742,7 +739,15 @@ void setup()
         wifiAP->handleClient();
         io->run();
         if (buttonsPressed.wasDownPressed || buttonsPressed.wasOkPressed || buttonsPressed.wasUpPressed)
+        {
             tft->run();
+        }
+        if (millis() - screenRefresh > 5000)
+        {
+            io->updateIoState();
+            tft->run();
+            screenRefresh = millis();
+        }
     }
 }
 
