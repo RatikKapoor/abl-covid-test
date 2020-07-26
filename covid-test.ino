@@ -29,7 +29,9 @@ const char *password = "password";
 #define HEATER_PIN 32
 #define LED_ARRAY_PIN 33
 #define SERVO_PIN 25
-#define TEMP_SENSOR_PIN 39
+#define TEMP1_SENSOR_PIN 39
+#define TEMP2_SENSOR_PIN 34
+#define TEMP3_SENSOR_PIN 35
 #define TFT_DC 2
 #define TFT_RST -1
 #define TFT_CS 5
@@ -39,7 +41,7 @@ const char *password = "password";
 
 /**
  * 
- * Data Structs
+ * Data Structs & Enums
  * 
  */
 struct StatusMessage
@@ -63,6 +65,13 @@ struct ButtonsPressed
     bool wasDownPressed;
     bool wasOkPressed;
     unsigned long lastInterruptTime;
+};
+
+enum CurrentSelection
+{
+    Heater = 0,
+    LedArray = 1,
+    Motor = 2
 };
 
 /**
@@ -217,7 +226,9 @@ bool RelayController::getActive()
 class TemperatureSensor
 {
 private:
-    int pin;
+    int pin1;
+    int pin2;
+    int pin3;
     //    double temps[] = new double[10];
     double currentTemp;
     //    int currentPtr = 0;
@@ -228,39 +239,45 @@ private:
     double To = 298.15;   // Temperature in Kelvin for 25 degree Celsius
     double Ro = 100000.0; // Resistance of Thermistor at 25 degree Celsius
 
-    void calculateTemp();
+    double calculateTemp(int pin);
 
 public:
-    TemperatureSensor(int pin);
+    TemperatureSensor(int pin1, int pin2, int pin3);
     ~TemperatureSensor();
     double getCurrentTemp();
 };
 
-TemperatureSensor::TemperatureSensor(int pin)
+TemperatureSensor::TemperatureSensor(int pin1, int pin2, int pin3)
 {
-    this->pin = pin;
+    this->pin1 = pin1;
+    this->pin2 = pin2;
+    this->pin3 = pin3;
 }
 
 TemperatureSensor::~TemperatureSensor()
 {
 }
 
-void TemperatureSensor::calculateTemp()
+double TemperatureSensor::calculateTemp(int pin)
 {
     double Vout, Rt = 0;
     double T, Tc, Tf = 0;
 
-    Vout = analogRead(this->pin) * this->Vs / this->adcMax;
+    Vout = analogRead(pin) * this->Vs / this->adcMax;
     Rt = this->R1 * Vout / (this->Vs - Vout);
     T = 1 / (1 / this->To - log(Rt / this->Ro) / this->Beta);
     Tc = T - 273.15;
-    this->currentTemp = Tc;
-    return;
+    // this->currentTemp = Tc;
+    return Tc;
 }
 
 double TemperatureSensor::getCurrentTemp()
 {
-    this->calculateTemp();
+    double temps[3];
+    temps[0] = this->calculateTemp(this->pin1);
+    temps[1] = this->calculateTemp(this->pin2);
+    temps[2] = this->calculateTemp(this->pin3);
+    this->currentTemp = (temps[0] + temps[1] + temps[2]) / 3;
     return this->currentTemp;
 }
 
@@ -278,7 +295,7 @@ private:
     TemperatureSensor *temperatureSensor;
 
 public:
-    IO(int motorPin, int heaterPin, int ledArrayPin, int tempPin);
+    IO(int motorPin, int heaterPin, int ledArrayPin, int tempPin1, int tempPin2, int tempPin3);
     ~IO();
     void setMotorPower(int power);
     int getMotorPower();
@@ -293,12 +310,12 @@ public:
     void updateIoState();
 };
 
-IO::IO(int motorPin, int heaterPin, int ledArrayPin, int tempPin)
+IO::IO(int motorPin, int heaterPin, int ledArrayPin, int tempPin1, int tempPin2, int tempPin3)
 {
     this->motorController = new MotorController(motorPin);
     this->heaterController = new RelayController(heaterPin);
     this->ledArrayController = new RelayController(ledArrayPin);
-    this->temperatureSensor = new TemperatureSensor(tempPin);
+    this->temperatureSensor = new TemperatureSensor(tempPin1, tempPin2, tempPin3);
     this->updateIoState();
 }
 
@@ -389,25 +406,27 @@ class TFT
 {
 private:
     Adafruit_ST7735 *tft;
-    bool isPaused = false;
+    IO *io;
+    CurrentSelection currentSelection = CurrentSelection::Heater;
 
 public:
-    TFT(int CS, int DC);
+    TFT(int CS, int DC, IO *io);
     ~TFT();
     void clear();
     void text(String text);
-    void text(String text, unsigned short color);
     void text(String text, int x, int y);
+    void text(String text, unsigned short color);
     void text(String text, int x, int y, unsigned short color);
     void run();
 };
 
-TFT::TFT(int CS, int DC)
+TFT::TFT(int CS, int DC, IO *io)
 {
     this->tft = new Adafruit_ST7735(CS, DC, -1);
     this->tft->initR(INITR_144GREENTAB);
     this->tft->setRotation(1);
     this->tft->fillScreen(ST7735_BLACK);
+    this->io = io;
 }
 
 TFT::~TFT()
@@ -424,14 +443,14 @@ void TFT::text(String text)
     this->text(text, 0, 0);
 }
 
-void TFT::text(String text, unsigned short color)
-{
-    this->text(text, 0, 0, color);
-}
-
 void TFT::text(String text, int x, int y)
 {
     this->text(text, x, y, 0xFFFF);
+}
+
+void TFT::text(String text, unsigned short color)
+{
+    this->text(text, 0, 0, color);
 }
 
 void TFT::text(String text, int x, int y, unsigned short color)
@@ -445,30 +464,88 @@ void TFT::text(String text, int x, int y, unsigned short color)
 void TFT::run()
 {
     this->clear();
-    this->text(tftStatus.message, tftStatus.colour);
-    this->text((String) "Temp: " + (String)ioState.currentTemp, 0, 10, 0xEEEE);
-    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 20, 0xEEEE);
-    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 30, 0xEEEE);
-    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 40, 0xEEEE);
 
     if (buttonsPressed.wasDownPressed || buttonsPressed.wasOkPressed || buttonsPressed.wasUpPressed)
     {
         if (buttonsPressed.wasUpPressed)
         {
             this->text("UP", 0, 60);
+            switch (currentSelection)
+            {
+            case CurrentSelection::LedArray:
+                currentSelection = CurrentSelection::Heater;
+                break;
+
+            case CurrentSelection::Motor:
+                currentSelection = CurrentSelection::LedArray;
+                break;
+
+            default:
+                break;
+            }
             buttonsPressed.wasUpPressed = false;
         }
         if (buttonsPressed.wasDownPressed)
         {
             this->text("DOWN", 0, 70);
+            switch (currentSelection)
+            {
+            case CurrentSelection::Heater:
+                currentSelection = CurrentSelection::LedArray;
+                break;
+
+            case CurrentSelection::LedArray:
+                currentSelection = CurrentSelection::Motor;
+                break;
+
+            default:
+                break;
+            }
             buttonsPressed.wasDownPressed = false;
         }
         if (buttonsPressed.wasOkPressed)
         {
             this->text("OK", 0, 80);
+            switch (currentSelection)
+            {
+            case CurrentSelection::Heater:
+            {
+                io->getHeaterEnabled() ? io->setHeaterEnabled(false) : io->setHeaterEnabled(true);
+                break;
+            }
+
+            case CurrentSelection::LedArray:
+            {
+                io->getLedArrayEnabled() ? io->setLedArrayEnabled(false) : io->setLedArrayEnabled(true);
+                break;
+            }
+
+            case CurrentSelection::Motor:
+            {
+                int currentPower = io->getMotorPower();
+                if (currentPower > 0)
+                {
+                    io->setMotorPower(0);
+                }
+                else
+                {
+                    io->setMotorPower(95);
+                }
+                break;
+            }
+
+            default:
+                break;
+            }
             buttonsPressed.wasOkPressed = false;
         }
     }
+
+    this->text(tftStatus.message, tftStatus.colour);
+    this->text((String) "Temp: " + (String)ioState.currentTemp, 0, 10, 0xFFFF);
+    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 25, currentSelection == CurrentSelection::Heater ? 0xFFFF : 0xDDDD);
+    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 35, currentSelection == CurrentSelection::LedArray ? 0xFFFF : 0xDDDD);
+    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 45, currentSelection == CurrentSelection::Motor ? 0xFFFF : 0xDDDD);
 }
 
 /**
@@ -649,10 +726,10 @@ void Buttons::onOkPress()
 void setup()
 {
     Serial.begin(9600);
-    TFT *tft = new TFT(TFT_CS, TFT_DC);
+    IO *io = new IO(SERVO_PIN, HEATER_PIN, LED_ARRAY_PIN, TEMP1_SENSOR_PIN, TEMP2_SENSOR_PIN, TEMP3_SENSOR_PIN);
+    TFT *tft = new TFT(TFT_CS, TFT_DC, io);
     tft->text("ABL Covid Test", 0, 0, 0xFCA0);
     tft->text("\n\nInitializing...\nPlease wait", 0, 0, 0xFFFF);
-    IO *io = new IO(SERVO_PIN, HEATER_PIN, LED_ARRAY_PIN, TEMP_SENSOR_PIN);
     WifiAP *wifiAP = new WifiAP(ssid, password, io, tft);
     delay(2000);
     tftStatus.message = "Ready";
