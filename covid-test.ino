@@ -191,7 +191,7 @@ void RelayController::setEnabled(bool enabled)
 {
     this->enabled = enabled;
     this->updatePin();
-    buttonsPressed.lastInterruptTime = millis() + 50; // Debounced here to prevent cross-talk between buttons and relay pins
+    buttonsPressed.lastInterruptTime = millis() + 200; // Debounced here to prevent cross-talk between buttons and relay pins
     return;
 }
 
@@ -263,10 +263,17 @@ double TemperatureSensor::calculateTemp(int pin)
     double Vout, Rt = 0;
     double T, Tc, Tf = 0;
 
-    Vout = analogRead(pin) * this->Vs / this->adcMax;
-    Rt = this->R1 * Vout / (this->Vs - Vout);
-    T = 1 / (1 / this->To - log(Rt / this->Ro) / this->Beta);
-    Tc = T - 273.15;
+    double temps[5];
+
+    for (int i = 0; i < 5; i++)
+    {
+        Vout = analogRead(pin) * this->Vs / this->adcMax;
+        Rt = this->R1 * Vout / (this->Vs - Vout);
+        T = 1 / (1 / this->To - log(Rt / this->Ro) / this->Beta);
+        temp[i] = T - 273.15;
+    }
+
+    Tc = (temps[0] + temps[1] + temps[2] + temps[3] + temps[4]) / 5;
     return Tc;
 }
 
@@ -337,11 +344,11 @@ int IO::getMotorPower()
 void IO::run()
 {
     motorController->run();
-    if (temperatureSensor->getCurrentTemp() > 61.5 && heaterController->getEnabled())
+    if (temperatureSensor->getCurrentTemp() > 62.5 && heaterController->getEnabled())
     {
         heaterController->setActive(false);
     }
-    else if (temperatureSensor->getCurrentTemp() < 58.5 && heaterController->getEnabled())
+    else if (temperatureSensor->getCurrentTemp() < 59.0 && heaterController->getEnabled())
     {
         heaterController->setActive(true);
     }
