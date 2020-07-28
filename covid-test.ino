@@ -57,6 +57,7 @@ struct IoState
     bool ledArrayEnabled;
     int motorPower;
     double currentTemp;
+    unsigned long lastTempCheck;
 };
 
 struct ButtonsPressed
@@ -191,7 +192,7 @@ void RelayController::setEnabled(bool enabled)
 {
     this->enabled = enabled;
     this->updatePin();
-    buttonsPressed.lastInterruptTime = millis() + 200; // Debounced here to prevent cross-talk between buttons and relay pins
+//    buttonsPressed.lastInterruptTime = millis() + 200; // Debounced here to prevent cross-talk between buttons and relay pins
     return;
 }
 
@@ -270,7 +271,7 @@ double TemperatureSensor::calculateTemp(int pin)
         Vout = analogRead(pin) * this->Vs / this->adcMax;
         Rt = this->R1 * Vout / (this->Vs - Vout);
         T = 1 / (1 / this->To - log(Rt / this->Ro) / this->Beta);
-        temp[i] = T - 273.15;
+        temps[i] = T - 273.15;
     }
 
     Tc = (temps[0] + temps[1] + temps[2] + temps[3] + temps[4]) / 5;
@@ -344,13 +345,21 @@ int IO::getMotorPower()
 void IO::run()
 {
     motorController->run();
-    if (temperatureSensor->getCurrentTemp() > 62.5 && heaterController->getEnabled())
+    if (millis() - ioState.lastTempCheck > 1000)
     {
-        heaterController->setActive(false);
-    }
-    else if (temperatureSensor->getCurrentTemp() < 59.0 && heaterController->getEnabled())
-    {
-        heaterController->setActive(true);
+      if (temperatureSensor->getCurrentTemp() > 62.5 && heaterController->getEnabled())
+      {
+          heaterController->setActive(false);
+      }
+      else if (temperatureSensor->getCurrentTemp() < 59.0 && temperatureSensor->getCurrentTemp() > 5.0 && heaterController->getEnabled())
+      {
+          heaterController->setActive(true);
+      }
+      else
+      {
+          heaterController->setActive(false);
+      }
+      ioState.lastTempCheck = millis();
     }
     return;
 }
@@ -546,9 +555,9 @@ void TFT::run()
 
     this->text(tftStatus.message, tftStatus.colour);
     this->text((String) "Temp: " + (String)ioState.currentTemp, 0, 10, 0xFFFF);
-    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 25, currentSelection == CurrentSelection::Heater ? 0xFFFF : 0xBDD7);
-    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 35, currentSelection == CurrentSelection::LedArray ? 0xFFFF : 0xBDD7);
-    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 45, currentSelection == CurrentSelection::Motor ? 0xFFFF : 0xBDD7);
+    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 25, currentSelection == CurrentSelection::Heater ? 0xFF80 : 0xBDD7);
+    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 35, currentSelection == CurrentSelection::LedArray ? 0xFF80 : 0xBDD7);
+    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 45, currentSelection == CurrentSelection::Motor ? 0xFF80 : 0xBDD7);
     this->text((String) "Press Up/Down/Ok to\ntoggle state.", 0, 60, 0xDEDB);
 }
 
@@ -694,7 +703,7 @@ Buttons::~Buttons()
 
 void Buttons::onUpPress()
 {
-    if (millis() - buttonsPressed.lastInterruptTime > 200)
+    if (millis() - buttonsPressed.lastInterruptTime > 350)
     {
         buttonsPressed.wasUpPressed = true;
         Serial.println("upPressed");
@@ -704,7 +713,7 @@ void Buttons::onUpPress()
 
 void Buttons::onDownPress()
 {
-    if (millis() - buttonsPressed.lastInterruptTime > 200)
+    if (millis() - buttonsPressed.lastInterruptTime > 350)
     {
         buttonsPressed.wasDownPressed = true;
         Serial.println("downPressed");
@@ -714,7 +723,7 @@ void Buttons::onDownPress()
 
 void Buttons::onOkPress()
 {
-    if (millis() - buttonsPressed.lastInterruptTime > 200)
+    if (millis() - buttonsPressed.lastInterruptTime > 350)
     {
         buttonsPressed.wasOkPressed = true;
         Serial.println("okPressed");
