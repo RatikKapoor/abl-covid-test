@@ -101,6 +101,7 @@ private:
     int ms = 1500;
     int pin;
     void ease();
+    unsigned long lastIncrementTime;
 
 public:
     MotorController(int pin);
@@ -142,11 +143,19 @@ void MotorController::ease()
     int finalMs = map(power, 0, 100, 1500, 1600);
     if (finalMs < this->ms)
     {
-        this->ms -= 1;
+        if (millis() - this->lastIncrementTime > 20)
+        {
+            this->ms -= 1;
+            this->lastIncrementTime = millis();
+        }
     }
     else if (finalMs > this->ms)
     {
-        this->ms += 1;
+        if (millis() - this->lastIncrementTime > 20)
+        {
+            this->ms += 1;
+            this->lastIncrementTime = millis();
+        }
     }
 }
 
@@ -198,6 +207,7 @@ void RelayController::setEnabled(bool enabled)
 
 void RelayController::updatePin()
 {
+    buttonsPressed.lastInterruptTime = millis();
     if (this->enabled && this->active)
     {
         digitalWrite(this->pin, HIGH);
@@ -283,8 +293,9 @@ double TemperatureSensor::getCurrentTemp()
     double temps[3];
     temps[0] = this->calculateTemp(this->pin1);
     temps[1] = this->calculateTemp(this->pin2);
-    temps[2] = this->calculateTemp(this->pin3);
-    this->currentTemp = (temps[0] + temps[1] + temps[2]) / 3;
+    // temps[2] = this->calculateTemp(this->pin3);
+    // this->currentTemp = (temps[0] + temps[1] + temps[2]) / 3;
+    this->currentTemp = (temps[0] + temps[1]) / 2;
     return this->currentTemp;
 }
 
@@ -345,17 +356,17 @@ int IO::getMotorPower()
 void IO::run()
 {
     motorController->run();
-    if (millis() - ioState.lastTempCheck > 1000)
+    if (millis() - ioState.lastTempCheck > 5000)
     {
       if (temperatureSensor->getCurrentTemp() > 62.5 && heaterController->getEnabled())
       {
           heaterController->setActive(false);
       }
-      else if (temperatureSensor->getCurrentTemp() < 59.0 && temperatureSensor->getCurrentTemp() > 5.0 && heaterController->getEnabled())
+      else if (temperatureSensor->getCurrentTemp() < 59.0 && temperatureSensor->getCurrentTemp() > -15.0 && heaterController->getEnabled())
       {
           heaterController->setActive(true);
       }
-      else
+      else if (temperatureSensor->getCurrentTemp() < -15.0)
       {
           heaterController->setActive(false);
       }
