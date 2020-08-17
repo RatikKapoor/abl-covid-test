@@ -201,7 +201,7 @@ void RelayController::setEnabled(bool enabled)
 {
     this->enabled = enabled;
     this->updatePin();
-//    buttonsPressed.lastInterruptTime = millis() + 200; // Debounced here to prevent cross-talk between buttons and relay pins
+    //    buttonsPressed.lastInterruptTime = millis() + 200; // Debounced here to prevent cross-talk between buttons and relay pins
     return;
 }
 
@@ -358,19 +358,19 @@ void IO::run()
     motorController->run();
     if (millis() - ioState.lastTempCheck > 5000)
     {
-      if (temperatureSensor->getCurrentTemp() > 62.5 && heaterController->getEnabled())
-      {
-          heaterController->setActive(false);
-      }
-      else if (temperatureSensor->getCurrentTemp() < 59.0 && temperatureSensor->getCurrentTemp() > -15.0 && heaterController->getEnabled())
-      {
-          heaterController->setActive(true);
-      }
-      else if (temperatureSensor->getCurrentTemp() < -15.0)
-      {
-          heaterController->setActive(false);
-      }
-      ioState.lastTempCheck = millis();
+        if (temperatureSensor->getCurrentTemp() > 62.5 && heaterController->getEnabled())
+        {
+            heaterController->setActive(false);
+        }
+        else if (temperatureSensor->getCurrentTemp() < 59.0 && temperatureSensor->getCurrentTemp() > -15.0 && heaterController->getEnabled())
+        {
+            heaterController->setActive(true);
+        }
+        else if (temperatureSensor->getCurrentTemp() < -15.0)
+        {
+            heaterController->setActive(false);
+        }
+        ioState.lastTempCheck = millis();
     }
     return;
 }
