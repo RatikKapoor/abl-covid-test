@@ -12,7 +12,8 @@
 
 // Include Adafruit Graphics Library (to be used with ST7735 display)
 #include <Adafruit_GFX.h> // Core graphics library
-#include <Adafruit_ST7735.h>
+//#include <Adafruit_ST7735.h>
+#include <Adafruit_ILI9341.h>
 #include <SPI.h>
 
 // Include Wifi module drivers
@@ -431,7 +432,8 @@ void IO::updateIoState()
 class TFT
 {
 private:
-    Adafruit_ST7735 *tft;
+//    Adafruit_ST7735 *tft;
+    Adafruit_ILI9341 *tft;
     IO *io;
     CurrentSelection currentSelection = CurrentSelection::Heater;
 
@@ -448,10 +450,13 @@ public:
 
 TFT::TFT(int CS, int DC, IO *io)
 {
-    this->tft = new Adafruit_ST7735(CS, DC, -1);
-    this->tft->initR(INITR_144GREENTAB);
+//    this->tft = new Adafruit_ST7735(CS, DC, -1);
+    this->tft = new Adafruit_ILI9341(CS, DC, -1);
+//    this->tft->initR(INITR_144GREENTAB);
+    this->tft->begin();
     this->tft->setRotation(1);
-    this->tft->fillScreen(ST7735_BLACK);
+//    this->tft->fillScreen(ST7735_BLACK);
+    this->tft->fillScreen(ILI9341_BLACK);
     this->io = io;
 }
 
@@ -461,7 +466,8 @@ TFT::~TFT()
 
 void TFT::clear()
 {
-    tft->fillScreen(ST7735_BLACK);
+//    tft->fillScreen(ST7735_BLACK);
+tft->fillScreen(ILI9341_BLACK);
 }
 
 void TFT::text(String text)
