@@ -1,0 +1,248 @@
+{
+  "uuid": "1279302e3bf3930099c52f9cbd42ea40",
+  "path": "Offline/ABL Covid Test",
+  "name": "ABL Covid Test",
+  "content": "",
+  "created_at": "2020-08-23 21:41:27",
+  "updated_at": "2020-08-30 23:11:59",
+  "stick": "",
+  "documents": [
+    {
+      "uuid": "e725492b8d59b9ec5ee76156a8dac21d",
+      "title": "Sheet_1",
+      "description": "",
+      "docType": "1",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "dcdf0339ae18468cacd1b04979256517": 1,
+        "17eb339750ed2e3756214c176201643d": 2,
+        "21f8f80a3f7c3c2b00b33f71a31ff6ef": 5,
+        "beee4b08e26c4ce9ad42cda1ae5e9f4a": 1,
+        "772868727f6b49409e219cfc7d8cecad": 2,
+        "8efc08ade96d466eb7e252611efe7d2b": 3,
+        "4be3f31eaf174a78924fbaca1807a8aa": 1,
+        "eb5667070f2740838be2cae37a5ed0a1": 2
+      },
+      "BOM": [
+        [
+          "Value",
+          "Quantity",
+          "Package",
+          "Components",
+          "CustomPara"
+        ],
+        [
+          "Display and Button Module",
+          1,
+          "2X6 12P 2.54",
+          "BUS1",
+          {
+            "BOM_Manufacturer": "",
+            "BOM_Manufacturer Part": "",
+            "BOM_Supplier Part": "",
+            "BOM_Supplier": "",
+            "puuid": "203d9c5e8a604a75856f4fbe2dc269a5",
+            "uuid": "4be3f31eaf174a78924fbaca1807a8aa"
+          }
+        ],
+        [
+          "100K 0805",
+          3,
+          "0805 RESISTOR (SMD)",
+          "R1,R2,R3",
+          {
+            "BOM_Supplier Part": "",
+            "BOM_Supplier": "",
+            "BOM_Manufacturer Part": "",
+            "puuid": "2e30896381f04d7a9060e91cf64f52f3",
+            "uuid": "8efc08ade96d466eb7e252611efe7d2b"
+          }
+        ],
+        [
+          "Relay Connection",
+          1,
+          "HDR-TH_6P-P2.54-V",
+          "H1",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "BOOMELE",
+            "BOM_Manufacturer Part": "Header-Male-2.54_1x6",
+            "BOM_Supplier Part": "C37208",
+            "puuid": "fd9fc9865419407ab6a588b47dec0227",
+            "uuid": "17eb339750ed2e3756214c176201643d"
+          }
+        ],
+        [
+          "Thermsistor Array",
+          1,
+          "HDR-TH_6P-P2.54-V",
+          "H3",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "BOOMELE",
+            "BOM_Manufacturer Part": "Header-Male-2.54_1x6",
+            "BOM_Supplier Part": "C37208",
+            "puuid": "fd9fc9865419407ab6a588b47dec0227",
+            "uuid": "17eb339750ed2e3756214c176201643d"
+          }
+        ],
+        [
+          "Motor Output",
+          1,
+          "HDR-TH_3P-P2.54-V",
+          "H2",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "BOOMELE",
+            "BOM_Manufacturer Part": "Header2.54mm 1*3P",
+            "BOM_Supplier Part": "C49257",
+            "puuid": "7e70b923819e4f3bb9fdeaf4abdca9d3",
+            "uuid": "21f8f80a3f7c3c2b00b33f71a31ff6ef"
+          }
+        ],
+        [
+          "3V3 Step Down",
+          1,
+          "HDR-TH_3P-P2.54-V",
+          "U3",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "BOOMELE",
+            "BOM_Manufacturer Part": "Header2.54mm 1*3P",
+            "BOM_Supplier Part": "C49257",
+            "puuid": "7e70b923819e4f3bb9fdeaf4abdca9d3",
+            "uuid": "21f8f80a3f7c3c2b00b33f71a31ff6ef"
+          }
+        ],
+        [
+          "120mm Fan 1",
+          1,
+          "HDR-TH_3P-P2.54-V",
+          "H4",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "BOOMELE",
+            "BOM_Manufacturer Part": "Header2.54mm 1*3P",
+            "BOM_Supplier Part": "C49257",
+            "puuid": "7e70b923819e4f3bb9fdeaf4abdca9d3",
+            "uuid": "21f8f80a3f7c3c2b00b33f71a31ff6ef"
+          }
+        ],
+        [
+          "120mm Fan 2",
+          1,
+          "HDR-TH_3P-P2.54-V",
+          "H5",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "BOOMELE",
+            "BOM_Manufacturer Part": "Header2.54mm 1*3P",
+            "BOM_Supplier Part": "C49257",
+            "puuid": "7e70b923819e4f3bb9fdeaf4abdca9d3",
+            "uuid": "21f8f80a3f7c3c2b00b33f71a31ff6ef"
+          }
+        ],
+        [
+          "40mm Fan",
+          1,
+          "HDR-TH_3P-P2.54-V",
+          "H6",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "BOOMELE",
+            "BOM_Manufacturer Part": "Header2.54mm 1*3P",
+            "BOM_Supplier Part": "C49257",
+            "puuid": "7e70b923819e4f3bb9fdeaf4abdca9d3",
+            "uuid": "21f8f80a3f7c3c2b00b33f71a31ff6ef"
+          }
+        ],
+        [
+          "2N2222",
+          2,
+          "TO92-EBC-OVAL",
+          "T1,T2",
+          {
+            "BOM_Manufacturer Part": "",
+            "puuid": "711488c301a5412ab185d8c98b2a2a5a",
+            "uuid": "772868727f6b49409e219cfc7d8cecad"
+          }
+        ],
+        [
+          "BuckConverter",
+          1,
+          "LM2596S",
+          "U2",
+          {
+            "BOM_Manufacturer Part": "",
+            "puuid": "a6eb9e440ab84c3bb7290f1deb1f36ba",
+            "uuid": "beee4b08e26c4ce9ad42cda1ae5e9f4a"
+          }
+        ],
+        [
+          "NodeMCU-32S",
+          1,
+          "NODEMCU-32SLUA",
+          "U1",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Supplier Part": "C111436",
+            "BOM_Manufacturer": "Ai-Thinker",
+            "BOM_Manufacturer Part": "NodeMCU-32SLua",
+            "puuid": "0733d55cb4e5433f9d1363240db316df",
+            "uuid": "dcdf0339ae18468cacd1b04979256517"
+          }
+        ],
+        [
+          "100R TBD",
+          2,
+          "0805 RESISTOR (SMD)",
+          "R4,R5",
+          {
+            "BOM_Supplier Part": "",
+            "BOM_Supplier": "",
+            "BOM_Manufacturer Part": "",
+            "puuid": "2e30896381f04d7a9060e91cf64f52f3",
+            "uuid": "eb5667070f2740838be2cae37a5ed0a1"
+          }
+        ]
+      ],
+      "updateTime": 1598847243,
+      "createTime": 1598240489,
+      "histories": [],
+      "created_at": "2020-08-23 21:41:29",
+      "updated_at": "2020-08-30 22:14:03"
+    },
+    {
+      "uuid": "663150fe5c0b3cb5f0788a9b469e6cc2",
+      "puuid": "1279302e3bf3930099c52f9cbd42ea40",
+      "title": "PCB_2020-08-23_22-55-18",
+      "filename": "PCB_2020-08-23_22-55-18.json",
+      "description": "",
+      "docType": "3",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "203d9c5e8a604a75856f4fbe2dc269a5": 1,
+        "2e30896381f04d7a9060e91cf64f52f3": 5,
+        "fd9fc9865419407ab6a588b47dec0227": 2,
+        "7e70b923819e4f3bb9fdeaf4abdca9d3": 5,
+        "711488c301a5412ab185d8c98b2a2a5a": 2,
+        "0733d55cb4e5433f9d1363240db316df": 1,
+        "a6eb9e440ab84c3bb7290f1deb1f36ba": 1,
+        "bd3bbbface2242e08f62401dfb64353c": 2
+      },
+      "BOM": [],
+      "updateTime": 1598850719,
+      "createTime": 1598244918,
+      "histories": [],
+      "created_at": "2020-08-23 22:55:18",
+      "updated_at": "2020-08-30 23:11:59"
+    }
+  ],
+  "sort": [],
+  "title": "ABL Covid Test",
+  "foldername": "ABL Covid Test",
+  "schfilename": "ABL Covid Test.json",
+  "schfilemtime": 1598847243426
+}

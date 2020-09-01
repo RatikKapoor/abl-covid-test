@@ -1,0 +1,132 @@
+{
+  "uuid": "349cb7a619a78ef285d07a42e3c1d098",
+  "path": "Offline/ABL Covid Test UI Module",
+  "name": "ABL Covid Test UI Module",
+  "content": "",
+  "created_at": "2020-08-31 19:13:55",
+  "updated_at": "2020-08-31 23:21:54",
+  "stick": "",
+  "documents": [
+    {
+      "uuid": "488156ccf30967c86ebebaec35efee51",
+      "title": "Sheet_1",
+      "description": "",
+      "docType": "1",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "4be3f31eaf174a78924fbaca1807a8aa": 1,
+        "9b23cd7c4bc44c1f950590b3b67b4d80": 1,
+        "339fe2cd55e0c1cf9903870c08bcace8": 3
+      },
+      "BOM": [
+        [
+          "Value",
+          "Quantity",
+          "Package",
+          "Components",
+          "CustomPara"
+        ],
+        [
+          "Display and Button Module",
+          1,
+          "2X6 12P 2.54",
+          "BUS1",
+          {
+            "BOM_Manufacturer": "",
+            "BOM_Manufacturer Part": "",
+            "BOM_Supplier Part": "",
+            "BOM_Supplier": "",
+            "puuid": "203d9c5e8a604a75856f4fbe2dc269a5",
+            "uuid": "4be3f31eaf174a78924fbaca1807a8aa"
+          }
+        ],
+        [
+          "LCD Display",
+          1,
+          "HDR2X14",
+          "P1",
+          {
+            "BOM_Manufacturer Part": "",
+            "puuid": "098563a7d9ec43d5a8aa41661d8d18d0",
+            "uuid": "9b23cd7c4bc44c1f950590b3b67b4d80"
+          }
+        ],
+        [
+          "UP",
+          1,
+          "KEY-TH_4P-L6.0-W6.0-P4.50-LS7.5",
+          "KEY1",
+          {
+            "BOM_Supplier Part": "C59982",
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "ReliaPro",
+            "BOM_Manufacturer Part": "button6*6*8",
+            "puuid": "dce469acea214c44ac101e294d1c2ff5",
+            "uuid": "339fe2cd55e0c1cf9903870c08bcace8"
+          }
+        ],
+        [
+          "DOWN",
+          1,
+          "KEY-TH_4P-L6.0-W6.0-P4.50-LS7.5",
+          "KEY2",
+          {
+            "BOM_Supplier Part": "C59982",
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "ReliaPro",
+            "BOM_Manufacturer Part": "button6*6*8",
+            "puuid": "dce469acea214c44ac101e294d1c2ff5",
+            "uuid": "339fe2cd55e0c1cf9903870c08bcace8"
+          }
+        ],
+        [
+          "OK",
+          1,
+          "KEY-TH_4P-L6.0-W6.0-P4.50-LS7.5",
+          "KEY3",
+          {
+            "BOM_Supplier Part": "C59982",
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "ReliaPro",
+            "BOM_Manufacturer Part": "button6*6*8",
+            "puuid": "dce469acea214c44ac101e294d1c2ff5",
+            "uuid": "339fe2cd55e0c1cf9903870c08bcace8"
+          }
+        ]
+      ],
+      "updateTime": 1598925592,
+      "createTime": 1598923247,
+      "histories": [],
+      "created_at": "2020-08-31 19:20:47",
+      "updated_at": "2020-08-31 19:59:52"
+    },
+    {
+      "uuid": "927b665b72c45eb43fa5212ab7be3303",
+      "puuid": "349cb7a619a78ef285d07a42e3c1d098",
+      "title": "PCB_2020-08-31_21-15-06",
+      "filename": "PCB_2020-08-31_21-15-06.json",
+      "description": "",
+      "docType": "3",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "203d9c5e8a604a75856f4fbe2dc269a5": 1,
+        "098563a7d9ec43d5a8aa41661d8d18d0": 1,
+        "dce469acea214c44ac101e294d1c2ff5": 3,
+        "3036750d1d0a4e9fa4035186551a7693": 2
+      },
+      "BOM": [],
+      "updateTime": 1598937714,
+      "createTime": 1598930106,
+      "histories": [],
+      "created_at": "2020-08-31 21:15:06",
+      "updated_at": "2020-08-31 23:21:54"
+    }
+  ],
+  "sort": [],
+  "title": "ABL Covid Test UI Module",
+  "foldername": "ABL Covid Test UI Module",
+  "schfilename": "ABL Covid Test UI Module.json",
+  "schfilemtime": 1598925592085
+}

@@ -1,0 +1,74 @@
+{
+  "uuid": "16cc8d0b040a65afe791c844ec1b9791",
+  "path": "Offline/ABL Covid Test LED Board",
+  "name": "ABL Covid Test LED Board",
+  "content": "",
+  "created_at": "2020-08-30 23:08:28",
+  "updated_at": "2020-08-31 00:12:22",
+  "stick": "",
+  "documents": [
+    {
+      "uuid": "4b824ba18a0c6c94abe86e3926fd4d30",
+      "title": "Sheet_1",
+      "description": "",
+      "docType": "1",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "dca612e0e0b0461abe769cb494abff63": 84
+      },
+      "BOM": [
+        [
+          "Value",
+          "Quantity",
+          "Package",
+          "Components",
+          "CustomPara"
+        ],
+        [
+          "3.4V",
+          84,
+          "LED-TH_BD3.0-P2.54-RD",
+          "LED1,LED2,LED3,LED4,LED5,LED6,LED7,LED8,LED9,LED10,LED11,LED12,LED13,LED14,LED15,LED16,LED17,LED18,LED19,LED20,LED21,LED22,LED23,LED24,LED25,LED26,LED27,LED28,LED29,LED30,LED31,LED32,LED33,LED34,LED35,LED36,LED37,LED38,LED39,LED40,LED41,LED42,LED43,LED44,LED45,LED46,LED47,LED48,LED49,LED50,LED51,LED52,LED53,LED54,LED55,LED56,LED57,LED58,LED59,LED60,LED61,LED62,LED63,LED64,LED65,LED66,LED67,LED68,LED69,LED70,LED71,LED72,LED73,LED74,LED75,LED76,LED77,LED78,LED79,LED80,LED81,LED82,LED83,LED84",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Supplier Part": "C605465",
+            "BOM_Manufacturer": "Everlight Elec",
+            "BOM_Manufacturer Part": "264-7GD",
+            "puuid": "6920fdb4cb1b4a6bb19cf453f49913fe",
+            "uuid": "dca612e0e0b0461abe769cb494abff63"
+          }
+        ]
+      ],
+      "updateTime": 1598851429,
+      "createTime": 1598850508,
+      "histories": [],
+      "created_at": "2020-08-30 23:08:28",
+      "updated_at": "2020-08-30 23:23:49"
+    },
+    {
+      "uuid": "00a0f7b9fc52de72f75305e7d51d1bd5",
+      "puuid": "16cc8d0b040a65afe791c844ec1b9791",
+      "title": "PCB_2020-08-30_23-46-11",
+      "filename": "PCB_2020-08-30_23-46-11.json",
+      "description": "",
+      "docType": "3",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "6920fdb4cb1b4a6bb19cf453f49913fe": 84
+      },
+      "BOM": [],
+      "updateTime": 1598854342,
+      "createTime": 1598852771,
+      "histories": [],
+      "created_at": "2020-08-30 23:46:11",
+      "updated_at": "2020-08-31 00:12:22"
+    }
+  ],
+  "sort": [],
+  "title": "ABL Covid Test LED Board",
+  "foldername": "ABL Covid Test LED Board",
+  "schfilename": "ABL Covid Test LED Board.json",
+  "schfilemtime": 1598851429531
+}
