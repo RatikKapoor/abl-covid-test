@@ -12,7 +12,7 @@
 
 // Include Adafruit Graphics Library (to be used with ST7735 display)
 #include <Adafruit_GFX.h> // Core graphics library
-//#include <Adafruit_ST7735.h>
+#include <Fonts/FreeSans9pt7b.h>
 #include <Adafruit_ILI9341.h>
 #include <SPI.h>
 
@@ -61,6 +61,15 @@ struct IoState
     unsigned long lastTempCheck;
 };
 
+struct Timer
+{
+    unsigned long currentTime;
+    unsigned long lastTimerTick;
+    unsigned long motorTimer;
+    unsigned long ledArrayTimer;
+    unsigned long heaterTimer;
+};
+
 struct ButtonsPressed
 {
     bool wasUpPressed;
@@ -69,7 +78,7 @@ struct ButtonsPressed
     unsigned long lastInterruptTime;
 };
 
-enum CurrentSelection
+enum Controls
 {
     Heater = 0,
     LedArray = 1,
@@ -87,6 +96,7 @@ struct StatusMessage tftStatus = {
 
 struct IoState ioState;
 struct ButtonsPressed buttonsPressed;
+struct Timer timer;
 unsigned long screenRefresh = 0;
 
 /**
@@ -346,11 +356,20 @@ IO::~IO()
 void IO::setMotorPower(int power)
 {
     motorController->setPower(power);
-    this->updateIoState();
     if (power != 0)
     {
+        if (timer.motorTimer == 0)
+        {
+            timer.motorTimer = timer.currentTime;
+        }
         this->lastMotorPower = power;
     }
+    else
+    {
+        timer.motorTimer = 0;
+    }
+    this->updateIoState();
+    
     return;
 }
 
@@ -378,12 +397,25 @@ void IO::run()
         }
         ioState.lastTempCheck = millis();
     }
+    if (millis() - timer.lastTimerTick > 1000)
+    {
+        timer.lastTimerTick = millis();
+        timer.currentTime += 1;
+    }
     return;
 }
 
 void IO::setHeaterEnabled(bool enabled)
 {
     heaterController->setEnabled(enabled);
+    if (enabled && timer.heaterTimer == 0)
+    {
+        timer.heaterTimer = timer.currentTime;
+    }
+    else if (!enabled)
+    {
+        timer.heaterTimer = 0;
+    }
     this->updateIoState();
     return;
 }
@@ -401,6 +433,14 @@ bool IO::getHeaterActive()
 void IO::setLedArrayEnabled(bool enabled)
 {
     ledArrayController->setEnabled(enabled);
+    if (enabled && timer.ledArrayTimer == 0)
+    {
+        timer.ledArrayTimer = timer.currentTime;
+    }
+    else if (!enabled)
+    {
+        timer.ledArrayTimer = 0;
+    }
     this->updateIoState();
     return;
 }
@@ -439,7 +479,8 @@ class TFT
 private:
     Adafruit_ILI9341 *tft;
     IO *io;
-    CurrentSelection currentSelection = CurrentSelection::Heater;
+    Controls currentSelection = Controls::Heater;
+    String getTimerText(Controls controls);
 
 public:
     TFT(int CS, int DC, IO *io);
@@ -458,6 +499,7 @@ TFT::TFT(int CS, int DC, IO *io)
     this->tft->begin();
     this->tft->setRotation(1);
     this->tft->fillScreen(ILI9341_BLACK);
+    this->tft->setFont(&FreeSans9pt7b);
     this->io = io;
 }
 
@@ -503,12 +545,12 @@ void TFT::run()
         {
             switch (currentSelection)
             {
-            case CurrentSelection::LedArray:
-                currentSelection = CurrentSelection::Heater;
+            case Controls::LedArray:
+                currentSelection = Controls::Heater;
                 break;
 
-            case CurrentSelection::Motor:
-                currentSelection = CurrentSelection::LedArray;
+            case Controls::Motor:
+                currentSelection = Controls::LedArray;
                 break;
 
             default:
@@ -520,12 +562,12 @@ void TFT::run()
         {
             switch (currentSelection)
             {
-            case CurrentSelection::Heater:
-                currentSelection = CurrentSelection::LedArray;
+            case Controls::Heater:
+                currentSelection = Controls::LedArray;
                 break;
 
-            case CurrentSelection::LedArray:
-                currentSelection = CurrentSelection::Motor;
+            case Controls::LedArray:
+                currentSelection = Controls::Motor;
                 break;
 
             default:
@@ -537,19 +579,19 @@ void TFT::run()
         {
             switch (currentSelection)
             {
-            case CurrentSelection::Heater:
+            case Controls::Heater:
             {
                 io->getHeaterEnabled() ? io->setHeaterEnabled(false) : io->setHeaterEnabled(true);
                 break;
             }
 
-            case CurrentSelection::LedArray:
+            case Controls::LedArray:
             {
                 io->getLedArrayEnabled() ? io->setLedArrayEnabled(false) : io->setLedArrayEnabled(true);
                 break;
             }
 
-            case CurrentSelection::Motor:
+            case Controls::Motor:
             {
                 int currentPower = io->getMotorPower();
                 if (currentPower > 0)
@@ -570,12 +612,53 @@ void TFT::run()
         }
     }
 
-    this->text(tftStatus.message, tftStatus.colour);
-    this->text((String) "Temp: " + (String)ioState.currentTemp, 0, 10, 0xFFFF);
-    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 25, currentSelection == CurrentSelection::Heater ? 0xFF80 : 0xBDD7);
-    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 35, currentSelection == CurrentSelection::LedArray ? 0xFF80 : 0xBDD7);
-    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 45, currentSelection == CurrentSelection::Motor ? 0xFF80 : 0xBDD7);
-    this->text((String) "Press Up/Down/Ok to\ntoggle state.", 0, 60, 0xDEDB);
+    // Base
+    this->text(tftStatus.message, 0, 15, tftStatus.colour);
+    this->text((String) "Temp: " + (String)ioState.currentTemp, 0, 35, 0xFFFF);
+    this->text((String) "Heater: " + (String)(ioState.heaterEnabled ? "On" : "Off"), 0, 75, currentSelection == Controls::Heater ? 0xFF80 : 0xBDD7);
+    this->text((String) "LED Array: " + (String)(ioState.ledArrayEnabled ? "On" : "Off"), 0, 100, currentSelection == Controls::LedArray ? 0xFF80 : 0xBDD7);
+    this->text((String) "Motor Power: " + (String)ioState.motorPower + (String) "%", 0, 125, currentSelection == Controls::Motor ? 0xFF80 : 0xBDD7);
+    this->text((String) "Press Up/Down/Ok to toggle state.", 0, 225, 0xDEDB);
+
+    // Timers
+    if (timer.heaterTimer > 0) this->text(this->getTimerText(Controls::Heater), 250, 75, 0x073F);
+    if (timer.ledArrayTimer > 0) this->text(this->getTimerText(Controls::LedArray), 250, 100, 0x073F);
+    if (timer.motorTimer > 0) this->text(this->getTimerText(Controls::Motor), 250, 125, 0x073F);
+}
+
+String TFT::getTimerText(Controls controls)
+{
+    unsigned long startTime;
+    // String name;
+    switch (controls)
+    {
+    case Controls::Heater:
+        startTime = timer.heaterTimer;
+        break;
+
+    case Controls::LedArray:
+        startTime = timer.ledArrayTimer;
+        break;
+    
+    case Controls::Motor:
+        startTime = timer.motorTimer;
+        break;
+    
+    default:
+        break;
+    }
+    unsigned long elapsedSeconds = timer.currentTime - startTime;
+    int seconds = elapsedSeconds % 60;
+    int minutes = elapsedSeconds / 60;
+    int hours = elapsedSeconds / 3600;
+    String strMinutes;
+    String strSeconds;
+    String strHours;
+    if (minutes / 10 == 0) strMinutes = (String)"0" + (String)minutes; else strMinutes = (String)minutes;
+    if (seconds / 10 == 0) strSeconds = (String)"0" + (String)seconds; else strSeconds = (String)seconds;
+    if (hours / 10 == 0) strHours = (String)"0" + (String)hours; else strHours = (String)hours;
+
+    return strHours + (String)":" + strMinutes + (String)":" + strSeconds;
 }
 
 /**
@@ -758,8 +841,8 @@ void setup()
     Serial.begin(9600);
     IO *io = new IO(SERVO_PIN, HEATER_PIN, LED_ARRAY_PIN, TEMP1_SENSOR_PIN, TEMP2_SENSOR_PIN, TEMP3_SENSOR_PIN);
     TFT *tft = new TFT(TFT_CS, TFT_DC, io);
-    tft->text("ABL Covid Test", 0, 0, 0xFCA0);
-    tft->text("\n\nInitializing...\nPlease wait", 0, 0, 0xFFFF);
+    tft->text("ABL Covid Test", 0, 15, 0xFCA0);
+    tft->text("\n\nInitializing...\nPlease wait", 0, 35, 0xFFFF);
     WifiAP *wifiAP = new WifiAP(ssid, password, io, tft);
     delay(2000);
     tftStatus.message = "Ready";
