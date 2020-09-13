@@ -417,7 +417,7 @@ double IO::getCurrentTemperature()
 
 String IO::getJsonState()
 {
-    return (String) "{heaterEnabled:" + (this->getHeaterEnabled() ? (String) "true," : (String) "false,") + (String) "motorPower:" + this->getMotorPower() + (String) ",ledArrayEnabled:" + (this->getLedArrayEnabled() ? (String) "true," : (String) "false,") + (String) "currentTemp:" + (String)this->getCurrentTemperature() + (String) "}";
+    return (String) "{\"heaterEnabled\":" + (this->getHeaterEnabled() ? (String) "true," : (String) "false,") + (String) "\"motorPower\":" + this->getMotorPower() + (String) ",\"ledArrayEnabled\":" + (this->getLedArrayEnabled() ? (String) "true," : (String) "false,") + (String) "\"currentTemp\":" + (String)this->getCurrentTemperature() + (String) "}";
 }
 
 void IO::updateIoState()
