@@ -318,6 +318,7 @@ public:
     ~IO();
     void setMotorPower(int power);
     int getMotorPower();
+    int lastMotorPower = 95;
     void run();
     void setHeaterEnabled(bool enabled);
     bool getHeaterEnabled();
@@ -346,6 +347,10 @@ void IO::setMotorPower(int power)
 {
     motorController->setPower(power);
     this->updateIoState();
+    if (power != 0)
+    {
+        this->lastMotorPower = power;
+    }
     return;
 }
 
@@ -432,7 +437,6 @@ void IO::updateIoState()
 class TFT
 {
 private:
-//    Adafruit_ST7735 *tft;
     Adafruit_ILI9341 *tft;
     IO *io;
     CurrentSelection currentSelection = CurrentSelection::Heater;
@@ -450,12 +454,9 @@ public:
 
 TFT::TFT(int CS, int DC, IO *io)
 {
-//    this->tft = new Adafruit_ST7735(CS, DC, -1);
     this->tft = new Adafruit_ILI9341(CS, DC, -1);
-//    this->tft->initR(INITR_144GREENTAB);
     this->tft->begin();
     this->tft->setRotation(1);
-//    this->tft->fillScreen(ST7735_BLACK);
     this->tft->fillScreen(ILI9341_BLACK);
     this->io = io;
 }
@@ -466,8 +467,7 @@ TFT::~TFT()
 
 void TFT::clear()
 {
-//    tft->fillScreen(ST7735_BLACK);
-tft->fillScreen(ILI9341_BLACK);
+    tft->fillScreen(ILI9341_BLACK);
 }
 
 void TFT::text(String text)
@@ -558,7 +558,7 @@ void TFT::run()
                 }
                 else
                 {
-                    io->setMotorPower(95);
+                    io->setMotorPower(io->lastMotorPower);
                 }
                 break;
             }
